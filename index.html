@@ -3,355 +3,671 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>考试管理 - 左侧步骤条布局</title>
+    <title>WPS 教学平台 - 教师工作台</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-        .step-line {
-            position: absolute;
-            left: 24px;
-            top: 40px;
-            bottom: -20px;
-            width: 2px;
-            background-color: #e5e7eb;
-            z-index: 0;
-            transition: background-color 0.3s;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        .step-item:last-child .step-line { display: none; }
-        .content-section { display: none; animation: fadeIn 0.3s ease-in-out; }
-        .content-section.active { display: block; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        
+        /* 左侧导航栏 - 保持原图深色风格 */
+        .sidebar-dark {
+            background: linear-gradient(180deg, #1a1f2e 0%, #0d1117 100%);
         }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        
+        .nav-item {
+            transition: all 0.2s ease;
+        }
+        
+        .nav-item:hover {
+            background: rgba(37, 99, 235, 0.15);
+            transform: translateX(4px);
+        }
+        
+        .nav-item.active {
+            background: #2563eb;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+        }
+        
+        /* 数据卡片 - 保持原图浅蓝风格 */
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 右侧个人信息卡片 - 保持原图蓝色 */
+        .profile-card {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        
+        /* 常用功能入口 */
+        .quick-action {
+            transition: all 0.2s ease;
+        }
+        
+        .quick-action:hover {
+            transform: translateY(-2px);
+        }
+        
+        .quick-action:hover .action-icon {
+            background: rgba(37, 99, 235, 0.15);
+        }
+        
+        .action-icon {
+            transition: all 0.2s ease;
+        }
+        
+        /* 趋势图表 */
+        .chart-container {
+            position: relative;
+            height: 280px;
+        }
+        
+        /* 待办事项 */
+        .todo-item {
+            transition: all 0.2s ease;
+        }
+        
+        .todo-item:hover {
+            background: rgba(37, 99, 235, 0.04);
+            transform: translateX(4px);
+        }
+        
+        .priority-high {
+            border-left: 3px solid #ef4444;
+        }
+        
+        .priority-medium {
+            border-left: 3px solid #f59e0b;
+        }
+        
+        .priority-low {
+            border-left: 3px solid #10b981;
+        }
+        
+        /* 课程列表 */
+        .course-item {
+            transition: all 0.2s ease;
+        }
+        
+        .course-item:hover {
+            background: rgba(37, 99, 235, 0.04);
+            padding-left: 1.25rem;
+        }
+        
+        /* 通知动画 */
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .notification-dot {
+            animation: pulse-dot 2s infinite;
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Tab 按钮 */
+        .tab-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .tab-btn.active {
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+        }
+        
+        /* 数字字体优化 */
+        .stat-number {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.5px;
+        }
     </style>
 </head>
-<body class="bg-gray-50 h-screen flex flex-col overflow-hidden text-gray-700">
-
-    <!-- 1. 顶部通栏 (Top Header) -->
-    <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
-        <div class="flex items-center gap-4">
-            <button class="text-gray-500 hover:text-blue-600 flex items-center gap-1 text-sm transition-colors">
-                <i class="fa-solid fa-arrow-left"></i> 返回
-            </button>
-            <div class="h-6 w-px bg-gray-300"></div>
-            <h1 class="font-semibold text-gray-800 text-base truncate max-w-lg">考试：人工智能通识 2025 秋季第一学期期末考试</h1>
-        </div>
-        <div class="flex items-center gap-4 text-sm text-gray-600">
-            <span class="flex items-center gap-1 hover:text-blue-600 cursor-pointer transition-colors"><i class="fa-regular fa-bell"></i> 消息</span>
-            <span class="flex items-center gap-1 hover:text-blue-600 cursor-pointer transition-colors"><i class="fa-regular fa-circle-question"></i> 帮助中心</span>
-            <div class="flex items-center gap-2 pl-4 border-l border-gray-200 cursor-pointer hover:opacity-80">
-                <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" class="w-8 h-8 rounded-full">
-                <span>你好，金山老师</span>
+<body class="bg-slate-50 text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- 左侧导航栏 -->
+        <aside class="sidebar-dark w-56 flex-shrink-0 flex flex-col text-white">
+            <div class="p-5 border-b border-slate-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-blue-500 rounded-lg flex items-center justify-center shadow-lg">
+                        <i class="fa-solid fa-graduation-cap text-lg"></i>
+                    </div>
+                    <h1 class="font-semibold text-base tracking-tight">WPS 教学平台</h1>
+                </div>
             </div>
-        </div>
-    </header>
-
-    <!-- 主体布局 -->
-    <div class="flex flex-1 overflow-hidden">
-        
-        <!-- 2. 左侧步骤条 (Left Sidebar Stepper) -->
-        <aside class="w-72 bg-white border-r border-gray-200 flex flex-col shrink-0 overflow-y-auto z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-            <div class="flex flex-col h-full">
-                <!-- 左上角课程信息卡片 -->
-                <div class="p-6 border-b border-gray-100 bg-gradient-to-br from-blue-50 to-white">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 bg-blue-600 rounded-xl shadow-md shadow-blue-200 flex items-center justify-center text-white">
-                            <i class="fa-solid fa-graduation-cap text-xl"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-bold text-gray-800 truncate">人工智能通识</p>
-                            <p class="text-xs text-gray-500 truncate">2025 秋季学期</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 步骤条区域 -->
-                <div class="p-6 flex-1">
-                    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6 pl-10">考试配置流程</h2>
-                    
-                    <!-- Step 1 -->
-                    <div class="step-item relative pl-10 pb-8 cursor-pointer group" onclick="switchStep(1)">
-                        <div class="step-line"></div>
-                        <div class="step-icon absolute left-0 top-0 w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center border border-green-200 z-10 transition-all duration-300">
-                            <i class="fa-solid fa-check text-xs"></i>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="step-title text-sm font-medium text-gray-900 transition-colors">选择考卷</span>
-                            <span class="step-desc text-xs text-gray-400 mt-1">已完成配置</span>
-                        </div>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="step-item relative pl-10 pb-8 cursor-pointer group" onclick="switchStep(2)">
-                        <div class="step-line"></div>
-                        <div class="step-icon absolute left-0 top-0 w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center border border-green-200 z-10 transition-all duration-300">
-                            <i class="fa-solid fa-check text-xs"></i>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="step-title text-sm font-medium text-gray-900 transition-colors">考试设置</span>
-                            <span class="step-desc text-xs text-gray-400 mt-1">时间、分值已设定</span>
-                        </div>
-                    </div>
-
-                    <!-- Step 3 (Active) -->
-                    <div class="step-item relative pl-10 pb-8 cursor-pointer group" id="step-3" onclick="switchStep(3)">
-                        <div class="step-line"></div>
-                        <div class="step-icon absolute left-0 top-0 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-200 z-10 ring-4 ring-blue-50 transition-all duration-300">
-                            <span class="text-xs font-bold">3</span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="step-title text-sm font-bold text-blue-600 transition-colors">场次与监考设置</span>
-                            <span class="step-desc text-xs text-blue-400 mt-1">当前步骤</span>
-                        </div>
-                        <div class="step-highlight absolute left-[-24px] top-0 bottom-0 w-1 bg-blue-600 rounded-r transition-opacity duration-300"></div>
-                    </div>
-
-                    <!-- Step 4 -->
-                    <div class="step-item relative pl-10 pb-2 cursor-pointer group" onclick="switchStep(4)">
-                        <div class="step-icon absolute left-0 top-0 w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center border border-gray-200 z-10 transition-all duration-300">
-                            <span class="text-xs">4</span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="step-title text-sm font-medium text-gray-500 transition-colors">考生名单</span>
-                            <span class="step-desc text-xs text-gray-400 mt-1">待导入/确认</span>
-                        </div>
-                    </div>
-                </div>
+            
+            <nav class="flex-1 py-4 px-3 space-y-1">
+                <a href="#" class="nav-item active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium">
+                    <i class="fa-solid fa-house w-5"></i>
+                    首页
+                </a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-book-open w-5"></i>
+                    我的课程
+                </a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-folder-open w-5"></i>
+                    资源中心
+                </a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-toolbox w-5"></i>
+                    实训工具
+                </a>
+            </nav>
+            
+            <div class="p-3 border-t border-slate-700 space-y-1">
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-users w-5"></i>
+                    班级管理
+                </a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-user w-5"></i>
+                    个人中心
+                </a>
             </div>
         </aside>
 
-        <!-- 3. 右侧内容区 (Right Content) -->
-        <main class="flex-1 overflow-y-auto bg-gray-50 p-6 relative">
-            
-            <!-- 内容块 1: 选择考卷 -->
-            <div id="content-1" class="content-section">
-                <div class="bg-white p-10 rounded-lg shadow-sm text-center border border-gray-200">
-                    <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-file-pen text-2xl"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">选择考卷</h3>
-                    <p class="text-gray-500">此处显示考卷选择界面内容...</p>
-                    <button onclick="switchStep(2)" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">下一步：考试设置</button>
+        <!-- 主内容区 -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <!-- 顶部栏 -->
+            <header class="bg-white border-b border-slate-200 h-14 flex items-center justify-between px-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-slate-500">当前位置：</span>
+                    <span class="text-sm text-slate-800 font-medium">首页</span>
                 </div>
-            </div>
-
-            <!-- 内容块 2: 考试设置 -->
-            <div id="content-2" class="content-section">
-                <div class="bg-white p-10 rounded-lg shadow-sm text-center border border-gray-200">
-                    <div class="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-gear text-2xl"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">考试设置</h3>
-                    <p class="text-gray-500">此处显示考试时间、分值等设置内容...</p>
-                    <button onclick="switchStep(3)" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">下一步：场次设置</button>
-                </div>
-            </div>
-
-            <!-- 内容块 3: 场次与监考设置 -->
-            <div id="content-3" class="content-section active">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-bold text-gray-800">考场与监考设置</h2>
-                    <div class="flex gap-3">
-                        <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm shadow-sm transition-colors">
-                            <i class="fa-solid fa-trash-can mr-1"></i> 删除批量考场
-                        </button>
-                        <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm shadow-sm transition-colors">
-                            <i class="fa-solid fa-file-export mr-1"></i> 导出考场信息
-                        </button>
-                        <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm shadow-sm transition-colors">
-                            <i class="fa-solid fa-file-import mr-1"></i> 导入考场信息
-                        </button>
-                        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm shadow-md shadow-blue-200 transition-colors">
-                            <i class="fa-solid fa-plus mr-1"></i> 新增考场
-                        </button>
+                <div class="flex items-center gap-5">
+                    <button class="relative text-slate-500 hover:text-slate-700 transition-colors">
+                        <i class="fa-regular fa-bell text-lg"></i>
+                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium notification-dot">2</span>
+                    </button>
+                    <button class="text-slate-500 hover:text-slate-700 transition-colors text-sm flex items-center gap-1">
+                        <i class="fa-regular fa-circle-question"></i>
+                        帮助中心
+                    </button>
+                    <div class="flex items-center gap-2 pl-5 border-l border-slate-200 cursor-pointer hover:opacity-80 transition-opacity">
+                        <img src="https://ui-avatars.com/api/?name=金山&background=3b82f6&color=fff" class="w-7 h-7 rounded-full" alt="Avatar">
+                        <div class="text-xs">
+                            <p class="font-medium text-slate-700">你好，金山老师</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
                     </div>
                 </div>
+            </header>
 
-                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
-                    <div class="grid grid-cols-4 gap-4 items-end">
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">场次代码</label>
-                            <select class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                <option>全部</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">考场名称</label>
-                            <input type="text" placeholder="请输入考场名称" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">开考状态</label>
-                            <select class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                <option>全部</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">监考老师</label>
-                            <input type="text" placeholder="请输入" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                        </div>
-                        <div class="col-span-2">
-                            <label class="block text-xs text-gray-500 mb-1">考试时间</label>
-                            <div class="flex gap-2">
-                                <input type="date" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                <span class="text-gray-400 self-center">至</span>
-                                <input type="date" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+            <!-- 内容滚动区 -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- 通知区域 -->
+                <div class="bg-white rounded-lg p-5 mb-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start gap-4">
+                            <div class="text-slate-700 font-medium">Hi，金山老师，你有 2 个新通知</div>
+                            <div class="space-y-2 text-sm text-slate-500">
+                                <p><span class="text-slate-400">【班级管理】</span>你有新的待确认成绩，请尽快处理，<a href="#" class="text-blue-600 hover:underline">前往处理</a></p>
+                                <p><span class="text-slate-400">【在线考试】</span>你有新的考试信息待发布，请尽快处理，<a href="#" class="text-blue-600 hover:underline">前往处理</a></p>
                             </div>
                         </div>
-                        <div class="col-span-2 flex justify-end gap-2">
-                            <button class="px-4 py-2 border border-gray-300 text-gray-600 rounded text-sm hover:bg-gray-50 transition-colors">重置</button>
-                            <button class="px-6 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 shadow-sm transition-colors">查询</button>
+                        <button class="text-slate-400 hover:text-slate-600 text-sm transition-colors">
+                            更多 <i class="fa-solid fa-chevron-right text-xs ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 常用功能入口 -->
+                <div class="bg-white rounded-lg p-5 mb-6 border border-slate-200 shadow-sm">
+                    <h3 class="text-base font-semibold text-slate-800 mb-5">常用功能入口</h3>
+                    <div class="grid grid-cols-4 gap-6">
+                        <div class="quick-action flex items-start gap-3 p-3 rounded-lg cursor-pointer">
+                            <div class="action-icon w-11 h-11 bg-blue-50 rounded-lg flex items-center justify-center text-blue-500 flex-shrink-0">
+                                <i class="fa-solid fa-play-circle text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-slate-800 text-sm mb-1">发起考试</p>
+                                <p class="text-xs text-slate-500 leading-relaxed">快速发起考试，及时检验学生学习情况</p>
+                            </div>
+                        </div>
+
+                        <div class="quick-action flex items-start gap-3 p-3 rounded-lg cursor-pointer">
+                            <div class="action-icon w-11 h-11 bg-purple-50 rounded-lg flex items-center justify-center text-purple-500 flex-shrink-0">
+                                <i class="fa-solid fa-book-open text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-slate-800 text-sm mb-1">创建课程</p>
+                                <p class="text-xs text-slate-500 leading-relaxed">使用官方课程直接上课 <i class="fa-solid fa-arrow-right text-xs ml-1"></i></p>
+                                <p class="text-xs text-slate-400 mt-1">自主创建新课程</p>
+                            </div>
+                        </div>
+
+                        <div class="quick-action flex items-start gap-3 p-3 rounded-lg cursor-pointer">
+                            <div class="action-icon w-11 h-11 bg-green-50 rounded-lg flex items-center justify-center text-green-500 flex-shrink-0">
+                                <i class="fa-solid fa-users text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-slate-800 text-sm mb-1">创建班级</p>
+                                <p class="text-xs text-slate-500 leading-relaxed">创建课程班级，开启新的教学</p>
+                            </div>
+                        </div>
+
+                        <div class="quick-action flex items-start gap-3 p-3 rounded-lg cursor-pointer">
+                            <div class="action-icon w-11 h-11 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500 flex-shrink-0">
+                                <i class="fa-solid fa-bullhorn text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-slate-800 text-sm mb-1">发布通知</p>
+                                <p class="text-xs text-slate-500 leading-relaxed">快速发布推送消息至学生，任务不错过</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
-                                <th class="p-4 w-10"><input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"></th>
-                                <th class="p-4">场次代码</th>
-                                <th class="p-4">考场名称</th>
-                                <th class="p-4">开考时间</th>
-                                <th class="p-4">结束时间</th>
-                                <th class="p-4">开考状态</th>
-                                <th class="p-4 text-center">考生总数</th>
-                                <th class="p-4 text-center">到考人数</th>
-                                <th class="p-4">监考老师</th>
-                                <th class="p-4">最近更新时间</th>
-                                <th class="p-4 text-right">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm text-gray-700 divide-y divide-gray-100">
-                            <tr class="hover:bg-blue-50 transition-colors group">
-                                <td class="p-4"><input type="checkbox" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
-                                <td class="p-4 font-medium">01 场次</td>
-                                <td class="p-4">微机 1 室</td>
-                                <td class="p-4 text-gray-500">2025-06-16<br>14:00:00</td>
-                                <td class="p-4 text-gray-500">2025-06-16<br>15:50:00</td>
-                                <td class="p-4"><span class="px-2 py-1 bg-orange-100 text-orange-600 rounded text-xs font-medium">未开考</span></td>
-                                <td class="p-4 text-center">80</td>
-                                <td class="p-4 text-center">80</td>
-                                <td class="p-4">邱金山</td>
-                                <td class="p-4 text-gray-400 text-xs">2026-02-10 14:21:55</td>
-                                <td class="p-4 text-right space-x-2">
-                                    <button class="text-blue-600 hover:text-blue-800 font-medium">编辑</button>
-                                    <button class="text-purple-600 hover:text-purple-800 font-medium">考试监控</button>
-                                    <button class="text-gray-400 hover:text-red-500 font-medium">删除</button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-blue-50 transition-colors group">
-                                <td class="p-4"><input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
-                                <td class="p-4 font-medium">02 场次</td>
-                                <td class="p-4">实训中心 607</td>
-                                <td class="p-4 text-gray-500">2025-06-16<br>14:00:00</td>
-                                <td class="p-4 text-gray-500">2025-06-16<br>15:50:00</td>
-                                <td class="p-4"><span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-xs font-medium">考试结束</span></td>
-                                <td class="p-4 text-center">45</td>
-                                <td class="p-4 text-center">45</td>
-                                <td class="p-4">李自成</td>
-                                <td class="p-4 text-gray-400 text-xs">2026-02-10 14:20:50</td>
-                                <td class="p-4 text-right space-x-2">
-                                    <button class="text-blue-600 hover:text-blue-800 font-medium opacity-50 cursor-not-allowed">编辑</button>
-                                    <button class="text-purple-600 hover:text-purple-800 font-medium">考试监控</button>
-                                    <button class="text-gray-400 hover:text-red-500 font-medium">删除</button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-blue-50 transition-colors group">
-                                <td class="p-4"><input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
-                                <td class="p-4 font-medium">03 场次</td>
-                                <td class="p-4">微机 6 室</td>
-                                <td class="p-4 text-gray-500">2025-06-16<br>14:00:00</td>
-                                <td class="p-4 text-gray-500">2025-06-16<br>15:50:00</td>
-                                <td class="p-4"><span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-xs font-medium">考试结束</span></td>
-                                <td class="p-4 text-center">200</td>
-                                <td class="p-4 text-center">199</td>
-                                <td class="p-4">白渊远</td>
-                                <td class="p-4 text-gray-400 text-xs">2026-02-10 14:20:50</td>
-                                <td class="p-4 text-right space-x-2">
-                                    <button class="text-blue-600 hover:text-blue-800 font-medium">编辑</button>
-                                    <button class="text-purple-600 hover:text-purple-800 font-medium">考试监控</button>
-                                    <button class="text-gray-400 hover:text-red-500 font-medium">删除</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="p-4 border-t border-gray-200 flex justify-between items-center text-sm text-gray-500 bg-white">
-                        <span>共 126 条</span>
-                        <div class="flex gap-1">
-                            <button class="px-3 py-1 border rounded hover:bg-gray-50 transition-colors">10 条/页</button>
-                            <button class="px-3 py-1 border rounded bg-blue-50 text-blue-600 border-blue-200 font-medium">1</button>
-                            <button class="px-3 py-1 border rounded hover:bg-gray-50 transition-colors">2</button>
-                            <button class="px-3 py-1 border rounded hover:bg-gray-50 transition-colors">3</button>
-                            <span class="px-2 self-center">...</span>
-                            <button class="px-3 py-1 border rounded hover:bg-gray-50 transition-colors">13</button>
-                            <button class="px-3 py-1 border rounded hover:bg-gray-50 transition-colors ml-2 flex items-center">前往 <input type="text" class="w-8 text-center border rounded mx-1 focus:border-blue-500 outline-none" value="1"> 页</button>
+                <div class="grid grid-cols-4 gap-6 mb-6">
+                    <!-- 数据统计 -->
+                    <div class="col-span-3">
+                        <div class="bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between mb-5">
+                                <div>
+                                    <h3 class="text-base font-semibold text-slate-800">数据统计</h3>
+                                    <span class="text-xs text-slate-400">(仅可查看权限数据范围)</span>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button class="tab-btn active px-3 py-1.5 text-xs font-medium border border-blue-500 text-blue-600 bg-blue-50 rounded">近 30 天</button>
+                                    <button class="tab-btn px-3 py-1.5 text-xs font-medium border border-slate-200 text-slate-500 hover:bg-slate-50 rounded">近半年</button>
+                                    <button class="tab-btn px-3 py-1.5 text-xs font-medium border border-slate-200 text-slate-500 hover:bg-slate-50 rounded">近一年</button>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="stat-card rounded-lg p-4">
+                                    <p class="text-xs text-slate-500 mb-2">课程数</p>
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="stat-number text-2xl font-bold text-slate-800">3</span>
+                                        <span class="text-xs text-slate-500"><span class="text-green-600">↑+1</span> 本月新增 1 门</span>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card rounded-lg p-4">
+                                    <p class="text-xs text-slate-500 mb-2">课程班级</p>
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="stat-number text-2xl font-bold text-slate-800">3</span>
+                                        <span class="text-xs text-orange-500">1 个待审批</span>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card rounded-lg p-4">
+                                    <p class="text-xs text-slate-500 mb-2">创建试卷数</p>
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="stat-number text-2xl font-bold text-slate-800">1</span>
+                                        <span class="text-xs text-slate-400">本月持平</span>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card rounded-lg p-4">
+                                    <p class="text-xs text-slate-500 mb-2">发起考试</p>
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="stat-number text-2xl font-bold text-slate-800">13</span>
+                                        <span class="text-xs text-slate-500">1 场待发布</span>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card rounded-lg p-4">
+                                    <p class="text-xs text-slate-500 mb-2">发布测验</p>
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="stat-number text-2xl font-bold text-slate-800">23</span>
+                                        <span class="text-xs text-slate-500"><span class="text-green-600">↑+1</span> 本月新增 1</span>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card rounded-lg p-4">
+                                    <p class="text-xs text-slate-500 mb-2">测验完成率</p>
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="stat-number text-2xl font-bold text-slate-800">98%</span>
+                                        <span class="text-xs text-slate-500"><span class="text-red-500">↓-3%</span> 本月下降 3%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 教学数据趋势 -->
+                        <div class="bg-white rounded-lg p-5 mt-6 border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between mb-5">
+                                <div>
+                                    <h3 class="text-base font-semibold text-slate-800">教学数据趋势</h3>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button class="tab-btn active px-4 py-2 text-xs font-medium text-blue-600 border-b-2 border-blue-600">发布任务数</button>
+                                    <button class="tab-btn px-4 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700">发起考试次数</button>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="teachingChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧栏 -->
+                    <div class="space-y-6">
+                        <!-- 个人信息卡片 -->
+                        <div class="profile-card rounded-lg p-6 text-white">
+                            <div class="flex flex-col items-center text-center">
+                                <div class="relative mb-4">
+                                    <img src="https://ui-avatars.com/api/?name=金山&background=ffffff&color=2563eb" class="w-16 h-16 rounded-full border-2 border-white/30" alt="Avatar">
+                                    <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center border-2 border-white">
+                                        <i class="fa-solid fa-graduation-cap text-xs"></i>
+                                    </div>
+                                </div>
+                                <h3 class="font-semibold text-lg mb-1">金山</h3>
+                                <p class="text-xs text-blue-100 mb-3">角色：普通老师</p>
+                                <div class="text-xs text-blue-100 space-y-1">
+                                    <p>金山数字校园</p>
+                                    <p>15889945309</p>
+                                    <p class="flex items-center justify-center gap-1">
+                                        wpsid:988889999
+                                        <i class="fa-regular fa-copy cursor-pointer hover:text-white"></i>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 我的课程 -->
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between p-4 border-b border-slate-100">
+                                <h3 class="font-semibold text-slate-800 text-sm">我的课程（3）</h3>
+                                <button class="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+                                    更多 <i class="fa-solid fa-chevron-right text-xs ml-1"></i>
+                                </button>
+                            </div>
+                            <div class="divide-y divide-slate-100">
+                                <div class="course-item p-3 cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-slate-700">人工智能通识课程</span>
+                                        <span class="text-xs text-blue-600">进入 <i class="fa-solid fa-chevron-right text-xs ml-1"></i></span>
+                                    </div>
+                                </div>
+                                <div class="course-item p-3 cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-slate-700">计算机基础课程</span>
+                                        <span class="text-xs text-blue-600">进入 <i class="fa-solid fa-chevron-right text-xs ml-1"></i></span>
+                                    </div>
+                                </div>
+                                <div class="course-item p-3 cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-slate-700">法律与权力课程</span>
+                                        <span class="text-xs text-blue-600">进入 <i class="fa-solid fa-chevron-right text-xs ml-1"></i></span>
+                                    </div>
+                                </div>
+                                <div class="course-item p-3 cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-slate-700 truncate max-w-32">这是课程名称 XXXX 超出用...</span>
+                                        <span class="text-xs text-blue-600">进入 <i class="fa-solid fa-chevron-right text-xs ml-1"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 待办事项（替换原排行榜） -->
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between p-4 border-b border-slate-100">
+                                <h3 class="font-semibold text-slate-800 text-sm">待办事项</h3>
+                                <span class="px-2 py-0.5 bg-red-100 text-red-600 rounded-full text-xs font-medium">5 项</span>
+                            </div>
+                            <div class="divide-y divide-slate-100">
+                                <div class="todo-item priority-high p-3 cursor-pointer">
+                                    <div class="flex items-start gap-2">
+                                        <div class="w-4 h-4 rounded border-2 border-slate-300 flex-shrink-0 mt-0.5"></div>
+                                        <div class="flex-1">
+                                            <p class="text-xs font-medium text-slate-700">确认期末考试成绩</p>
+                                            <p class="text-xs text-slate-400 mt-1">人工智能通识 · 126 人</p>
+                                            <span class="text-xs text-red-500 mt-1 block">今天 18:00 截止</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="todo-item priority-medium p-3 cursor-pointer">
+                                    <div class="flex items-start gap-2">
+                                        <div class="w-4 h-4 rounded border-2 border-slate-300 flex-shrink-0 mt-0.5"></div>
+                                        <div class="flex-1">
+                                            <p class="text-xs font-medium text-slate-700">发布新考试</p>
+                                            <p class="text-xs text-slate-400 mt-1">数据结构 · 第 3 章</p>
+                                            <span class="text-xs text-orange-500 mt-1 block">明天 12:00 截止</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="todo-item priority-low p-3 cursor-pointer">
+                                    <div class="flex items-start gap-2">
+                                        <div class="w-4 h-4 rounded border-2 border-slate-300 flex-shrink-0 mt-0.5"></div>
+                                        <div class="flex-1">
+                                            <p class="text-xs font-medium text-slate-700">批改作业</p>
+                                            <p class="text-xs text-slate-400 mt-1">Python 编程 · 15 份</p>
+                                            <span class="text-xs text-slate-400 mt-1 block">后天截止</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 border-t border-slate-100">
+                                <button class="w-full text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                                    查看全部 <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 实训工具 -->
+                        <div class="bg-white rounded-lg border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between p-4 border-b border-slate-100">
+                                <h3 class="font-semibold text-slate-800 text-sm">实训工具</h3>
+                                <button class="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+                                    更多 <i class="fa-solid fa-chevron-right text-xs ml-1"></i>
+                                </button>
+                            </div>
+                            <div class="p-4 grid grid-cols-2 gap-4">
+                                <div class="flex flex-col items-center text-center cursor-pointer group">
+                                    <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-500 mb-2 group-hover:bg-blue-100 transition-colors">
+                                        <i class="fa-solid fa-robot text-sm"></i>
+                                    </div>
+                                    <span class="text-xs text-slate-700 font-medium">WPS AI 实训室</span>
+                                </div>
+                                <div class="flex flex-col items-center text-center cursor-pointer group">
+                                    <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center text-green-500 mb-2 group-hover:bg-green-100 transition-colors">
+                                        <i class="fa-solid fa-laptop-code text-sm"></i>
+                                    </div>
+                                    <span class="text-xs text-slate-700 font-medium">计算机一级</span>
+                                </div>
+                                <div class="flex flex-col items-center text-center cursor-pointer group">
+                                    <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-500 mb-2 group-hover:bg-purple-100 transition-colors">
+                                        <i class="fa-solid fa-code text-sm"></i>
+                                    </div>
+                                    <span class="text-xs text-slate-700 font-medium">计算机二级</span>
+                                </div>
+                                <div class="flex flex-col items-center text-center cursor-pointer group">
+                                    <div class="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500 mb-2 group-hover:bg-orange-100 transition-colors">
+                                        <i class="fa-solid fa-certificate text-sm"></i>
+                                    </div>
+                                    <span class="text-xs text-slate-700 font-medium">KOS 认证</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 内容块 4: 考生名单 -->
-            <div id="content-4" class="content-section">
-                <div class="bg-white p-10 rounded-lg shadow-sm text-center border border-gray-200">
-                    <div class="w-16 h-16 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-users text-2xl"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">考生名单管理</h3>
-                    <p class="text-gray-500">此处显示考生导入、名单确认等内容...</p>
-                    <button onclick="switchStep(3)" class="mt-4 px-4 py-2 border border-gray-300 text-gray-600 rounded hover:bg-gray-50 text-sm">上一步：场次设置</button>
-                </div>
+                <!-- 页脚 -->
+                <footer class="mt-6 text-center text-xs text-slate-400 pb-4">
+                    <p>© 2025 WPS 教学平台 版权所有</p>
+                </footer>
             </div>
-
         </main>
     </div>
 
     <script>
-        function switchStep(stepIndex) {
-            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(`content-${stepIndex}`).classList.add('active');
+        // 初始化图表
+        const ctx = document.getElementById('teachingChart').getContext('2d');
 
-            const steps = document.querySelectorAll('.step-item');
-            steps.forEach((step, index) => {
-                const icon = step.querySelector('.step-icon');
-                const title = step.querySelector('.step-title');
-                const desc = step.querySelector('.step-desc');
-                const highlight = step.querySelector('.step-highlight');
-                const line = step.querySelector('.step-line');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['2025-02', '2025-03', '2025-04', '2025-05', '2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01'],
+                datasets: [
+                    {
+                        label: '我发布的',
+                        data: [52, 51, 65, 79, 75, 78, 79, 89, 98, 89, 79, 37],
+                        backgroundColor: '#6366f1',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                        barThickness: 20,
+                    },
+                    {
+                        label: '全校平均',
+                        data: [59, 59, 58, 52, 52, 59, 59, 93, 59, 59, 93, 59],
+                        backgroundColor: '#a5b4fc',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                        barThickness: 20,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            boxWidth: 6,
+                            padding: 15,
+                            font: {
+                                size: 11,
+                                family: 'Inter'
+                            },
+                            color: '#64748b'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                        titleColor: '#1e293b',
+                        bodyColor: '#64748b',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 10,
+                        displayColors: true,
+                        boxPadding: 4,
+                        usePointStyle: true,
+                        titleFont: {
+                            size: 12,
+                            family: 'Inter'
+                        },
+                        bodyFont: {
+                            size: 11,
+                            family: 'Inter'
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: '#f1f5f9',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 10,
+                                family: 'Inter'
+                            },
+                            color: '#94a3b8',
+                            padding: 8,
+                            callback: function(value) {
+                                return value;
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 10,
+                                family: 'Inter'
+                            },
+                            color: '#94a3b8',
+                            padding: 8,
+                            maxRotation: 0,
+                            minRotation: 0
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
 
-                icon.className = 'step-icon absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center border z-10 transition-all duration-300';
-                title.className = 'step-title text-sm font-medium text-gray-500 transition-colors';
-                desc.className = 'step-desc text-xs text-gray-400 mt-1';
-                if(highlight) highlight.style.opacity = '0';
-                if(line) line.style.backgroundColor = '#e5e7eb';
+        // Tab 切换效果
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const parent = this.parentElement;
+                parent.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active', 'text-blue-600', 'border-blue-500', 'border-blue-600', 'bg-blue-50');
+                    b.classList.add('text-slate-500', 'border-slate-200', 'border-transparent');
+                });
+                this.classList.add('active');
+                this.classList.remove('text-slate-500', 'border-slate-200', 'border-transparent');
+            });
+        });
 
-                if (index + 1 < stepIndex) {
-                    icon.classList.add('bg-green-100', 'text-green-600', 'border-green-200');
-                    icon.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
-                    title.classList.remove('text-gray-500');
-                    title.classList.add('text-gray-900');
-                    if(line) line.style.backgroundColor = '#86efac';
-                } else if (index + 1 === stepIndex) {
-                    icon.classList.add('bg-blue-600', 'text-white', 'shadow-md', 'shadow-blue-200', 'ring-4', 'ring-blue-50', 'border-transparent');
-                    icon.innerHTML = `<span class="text-xs font-bold">${stepIndex}</span>`;
-                    title.classList.remove('text-gray-500');
-                    title.classList.add('text-blue-600', 'font-bold');
-                    desc.classList.remove('text-gray-400');
-                    desc.classList.add('text-blue-400');
-                    desc.textContent = '当前步骤';
-                    if(highlight) highlight.style.opacity = '1';
-                    if(line) line.style.backgroundColor = '#93c5fd';
+        // 待办事项完成切换
+        document.querySelectorAll('.todo-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const checkbox = this.querySelector('.w-4');
+                if (checkbox.classList.contains('border-slate-300')) {
+                    checkbox.classList.remove('border-slate-300');
+                    checkbox.classList.add('bg-blue-500', 'border-blue-500');
+                    checkbox.innerHTML = '<i class="fa-solid fa-check text-white text-xs flex items-center justify-center h-full"></i>';
+                    this.style.opacity = '0.6';
                 } else {
-                    icon.classList.add('bg-gray-100', 'text-gray-400', 'border-gray-200');
-                    icon.innerHTML = `<span class="text-xs">${index + 1}</span>`;
+                    checkbox.classList.add('border-slate-300');
+                    checkbox.classList.remove('bg-blue-500', 'border-blue-500');
+                    checkbox.innerHTML = '';
+                    this.style.opacity = '1';
                 }
             });
-        }
+        });
     </script>
 </body>
 </html>
